@@ -96,15 +96,17 @@
     background-color: lightgray;
     color: black;
     margin-top: 30px;
+    
+    text-indent: 10px;
+    border-radius: 10px;
   }
   .input:focus {
     outline: none;
-    width: 320px;
-    height: 70px;
+    width: 310px;
+    height: 60px;
     position: relative;
-    left: 40px;
-
+    left: 45px;
+    background-color: rgb(12,12,12);
+    color: white;
   }
-  #log1_email {
-
-  }
+  

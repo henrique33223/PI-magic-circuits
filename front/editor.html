@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor Arqueológico</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f8f9fa;
+            overflow: hidden;
+        }
+        /* CORREÇÕES PARA O GRID/CANVAS */
+.workspace {
+    flex: 1;
+    background: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow: hidden; /* Adicione esta linha */
+}
+
+#projectCanvas {
+    background: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    position: relative; /* Adicione esta linha */
+    z-index: 1; /* Adicione esta linha */
+}
+
+.ferramentas {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    display: flex;
+    gap: 10px;
+    z-index: 100; /* Aumente o z-index */
+}
+
+.coordenadas {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    z-index: 100; /* Aumente o z-index */
+}
+
+.mensagem-ajuda {
+    background: #e7f3ff;
+    border: 1px solid #b3d9ff;
+    border-radius: 4px;
+    padding: 10px;
+    margin-top: 15px;
+    font-size: 14px;
+    color: #0066cc;
+    z-index: 100; /* Aumente o z-index */
+}
+
+/* Garantir que os modais fiquem acima de tudo */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 10000; /* Z-index muito alto para modais */
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    z-index: 10001; /* Acima do modal background */
+}
+        
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        /* Header */
+        .header {
+            background: white;
+            padding: 15px 30px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 320px;
+            background: white;
+            border-right: 1px solid #e9ecef;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .project-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .project-info h2 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+        
+        .info-item {
+            margin: 5px 0;
+            color: #555;
+        }
+        
+        /* Área de Trabalho */
+        .workspace {
+            flex: 1;
+            background: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        
+        .area-demarcada {
+            border: 2px solid #dc3545;
+            background: rgba(220, 53, 69, 0.05);
+            position: absolute;
+        }
+        
+        .area-escavacao {
+            position: absolute;
+            background: rgba(76, 175, 80, 0.3);
+            border: 2px solid #4caf50;
+            cursor: move;
+        }
+        
+        canvas {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        /* Listas */
+        .lista-section {
+            margin-top: 20px;
+        }
+        
+        .lista-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .item-lista {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .item-lista:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+        
+        .item-lista.selecionado {
+            background: #e3f2fd;
+            border-color: #1976d2;
+        }
+        
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .item-nome {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .item-tipo {
+            font-size: 0.9em;
+            color: #666;
+            background: #e9ecef;
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+        
+        .item-detalhes {
+            font-size: 0.85em;
+            color: #666;
+        }
+        
+        /* Botões */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #1976d2;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #1565c0;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+        
+        .botoes-acao {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            height: 80px;
+            resize: vertical;
+        }
+        
+        .coordenadas {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        
+        .ferramentas {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-ferramenta {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-ferramenta.active {
+            background: #1976d2;
+            color: white;
+            border-color: #1976d2;
+        }
+        
+        .botoes-edicao {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .mensagem-ajuda {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 15px;
+            font-size: 14px;
+            color: #0066cc;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <h1>Editor Arqueológico</h1>
+        <div class="header-buttons">
+            <button class="btn btn-primary" onclick="salvarProjeto()">💾 Salvar</button>
+            <button class="btn btn-success" onclick="exportarProjeto()">📤 Exportar</button>
+            <input type="file" id="importarInput" accept=".json" style="display: none;" onchange="importarProjeto(event)">
+            <button class="btn btn-info" onclick="document.getElementById('importarInput').click()">📥 Importar</button>
+            <button class="btn btn-secondary" onclick="voltarDashboard()">← Voltar</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="project-info">
+                <h2 id="projectName">Projeto Arqueológico</h2>
+                <div class="info-item"><strong>Dimensões:</strong> <span id="infoDimensoes">-</span></div>
+                <div class="info-item"><strong>Escala:</strong> 1:<span id="infoEscala">-</span></div>
+                <div class="info-item"><strong>Área Total:</strong> <span id="infoAreaTotal">-</span></div>
+            </div>
+
+            <!-- Áreas de Escavação -->
+            <div class="lista-section">
+                <h3>⛏️ Áreas de Escavação</h3>
+                <div id="lista-areas">
+                    <p style="color: #666; text-align: center; padding: 20px;">
+                        Nenhuma área adicionada
+                    </p>
+                </div>
+                <button class="btn btn-primary" onclick="adicionarArea()" style="width: 100%; margin-top: 10px;">
+                    + Nova Área
+                </button>
+            </div>
+
+            <!-- Artefatos -->
+            <div class="lista-section">
+                <h3>🏺 Artefatos Encontrados</h3>
+                <div id="lista-artefatos">
+                    <p style="color: #666; text-align: center; padding: 20px;">
+                        Nenhum artefato adicionado
+                    </p>
+                </div>
+                <button class="btn btn-primary" onclick="adicionarArtefato()" style="width: 100%; margin-top: 10px;">
+                    + Novo Artefato
+                </button>
+            </div>
+
+            <!-- Ações -->
+            <div class="botoes-acao">
+                <button class="btn btn-success" onclick="gerarRelatorio()">📊 Gerar Relatório</button>
+                <button class="btn btn-secondary" onclick="baixarMapa()">🗺️ Baixar Mapa</button>
+                <button class="btn btn-danger" onclick="limparTudo()">🗑️ Limpar Tudo</button>
+            </div>
+        </div>
+
+        <!-- Área de Trabalho -->
+        <div class="workspace">
+            <div class="ferramentas">
+                <button class="btn-ferramenta active" data-ferramenta="selecionar" onclick="selecionarFerramenta('selecionar')">↖️ Selecionar</button>
+                <button class="btn-ferramenta" data-ferramenta="area" onclick="selecionarFerramenta('area')">⛏️ Área</button>
+                <button class="btn-ferramenta" data-ferramenta="artefato" onclick="selecionarFerramenta('artefato')">🏺 Artefato</button>
+            </div>
+
+            <div id="area-demarcada" class="area-demarcada"></div>
+            <canvas id="projectCanvas"></canvas>
+            <div class="coordenadas" id="coordenadas">X: 0m, Y: 0m</div>
+            
+            <!-- Mensagem de ajuda para edição -->
+            <div id="mensagemEdicao" class="mensagem-ajuda" style="display: none; position: absolute; top: 60px; left: 50%; transform: translateX(-50%);">
+                ✏️ Modo de edição ativo: Arraste a área para movê-la. Clique em "Editar Área" para alterar tamanho.
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Adicionar/Editar Área -->
+    <div id="modalArea" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 20px;" id="tituloModalArea">⛏️ Nova Área de Escavação</h3>
+            <div class="form-group">
+                <label>Nome da Área:</label>
+                <input type="text" id="inputNomeArea" placeholder="Ex: Quadrante A1">
+            </div>
+            <div class="form-group">
+                <label>Descrição:</label>
+                <textarea id="inputDescArea" placeholder="Descreva a área de escavação..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Largura (metros):</label>
+                <input type="number" id="inputLarguraArea" placeholder="Ex: 5" min="1" step="0.1">
+            </div>
+            <div class="form-group">
+                <label>Altura (metros):</label>
+                <input type="number" id="inputAlturaArea" placeholder="Ex: 5" min="1" step="0.1">
+            </div>
+            <div class="botoes-edicao">
+                <button class="btn btn-primary" onclick="confirmarArea()" id="btnConfirmarArea">Adicionar</button>
+                <button class="btn btn-warning" onclick="voltarParaEdicao()" id="btnVoltarEdicao" style="display: none;">✏️ Voltar para Edição</button>
+                <button class="btn btn-danger" onclick="fecharModal()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Adicionar Artefato -->
+    <div id="modalArtefato" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 20px;">➕ Adicionar Artefato</h3>
+            <div class="form-group">
+                <label>Nome do Artefato:</label>
+                <input type="text" id="inputNome" placeholder="Ex: Vaso Cerâmico">
+            </div>
+            <div class="form-group">
+                <label>Material:</label>
+                <select id="inputMaterial">
+                    <option value="ceramica">Cerâmica</option>
+                    <option value="litico">Lítico (Pedra)</option>
+                    <option value="osso">Osso</option>
+                    <option value="metal">Metal</option>
+                    <option value="vidro">Vidro</option>
+                    <option value="outro">Outro</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Profundidade (cm):</label>
+                <input type="number" id="inputProfundidade" placeholder="Ex: 45">
+            </div>
+            <div class="form-group">
+                <label>Descrição:</label>
+                <textarea id="inputDescricao" placeholder="Descreva o artefato encontrado..."></textarea>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-primary" onclick="confirmarArtefato()">Adicionar</button>
+                <button class="btn btn-danger" onclick="fecharModal()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Relatório -->
+    <div id="modalRelatorio" class="modal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 20px;">📊 Relatório de Escavação</h2>
+            <div id="conteudoRelatorio"></div>
+            <div style="display: flex; gap: 10px; margin-top: 20px; justify-content: center;">
+                <button class="btn btn-success" onclick="imprimirRelatorio()">🖨️ Imprimir</button>
+                <button class="btn btn-secondary" onclick="baixarRelatorio()">📥 Baixar PDF</button>
+                <button class="btn btn-danger" onclick="fecharModal()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variáveis globais
+        let projetoAtual = null;
+        let areas = [];
+        let artefatos = [];
+        let ferramentaAtual = 'selecionar';
+        let areaEditando = null;
+        let arrastando = false;
+        let offset = { x: 0, y: 0 };
+        let areaSelecionada = null;
+        let elementosArea = [];
+        let modoEdicao = false;
+
+        // Carregar projeto
+       // Carregar projeto - CORRIGIDA
+// Carregar projeto - CORRIGIDA
+// Carregar projeto - VERSÃO FINAL CORRIGIDA
+async function carregarProjeto() {
+    try {
+        // Extrai o ID do projeto da URL
+        const caminho = window.location.pathname;
+        let projetoId = null;
+        
+        // Tenta extrair o ID da URL /editor/123
+        const match = caminho.match(/\/editor\/(\d+)/);
+        if (match) {
+            projetoId = match[1];
+        }
+        
+        // Se não encontrou na URL, tenta query string
+        if (!projetoId) {
+            const urlParams = new URLSearchParams(window.location.search);
+            projetoId = urlParams.get('id');
+        }
+        
+        console.log('🔍 Tentando carregar projeto ID:', projetoId);
+        
+        if (projetoId && !isNaN(projetoId)) {
+            // Tenta carregar da API primeiro
+            try {
+                console.log('📡 Buscando projeto na API...');
+                const response = await fetch(`/api/projetos/${projetoId}/completo`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        projetoAtual = data.projeto;
+                        areas = data.areas || [];
+                        artefatos = data.artefatos || [];
+                        console.log('✅ Projeto carregado da API:', projetoAtual.nome, areas.length, 'áreas', artefatos.length, 'artefatos');
+                        inicializarEditor();
+                        return;
+                    }
+                } else {
+                    console.log('❌ API retornou erro:', response.status);
+                }
+            } catch (apiError) {
+                console.log('🌐 API não disponível, tentando localStorage...', apiError);
+            }
+            
+            // Se API falhou, tenta localStorage
+            const chaveLocalStorage = `projeto_${projetoId}`;
+            const dadosSalvos = localStorage.getItem(chaveLocalStorage);
+            if (dadosSalvos) {
+                try {
+                    const dados = JSON.parse(dadosSalvos);
+                    projetoAtual = dados.projeto;
+                    areas = dados.areas || [];
+                    artefatos = dados.artefatos || [];
+                    console.log('💾 Projeto carregado do localStorage:', projetoAtual.nome);
+                    inicializarEditor();
+                    return;
+                } catch (e) {
+                    console.error('❌ Erro ao ler localStorage:', e);
+                }
+            }
+            
+            console.log('⚠️ Projeto não encontrado, criando demo...');
+        } else {
+            console.log('ℹ️  Nenhum ID válido, criando projeto demo');
+        }
+        
+        // Se não encontrou projeto, cria um novo DEMO
+        projetoAtual = {
+            id: 'demo-' + Date.now(),
+            nome: "Sítio Arqueológico Demo",
+            largura_m: 20,
+            altura_m: 15,
+            escala: 50
+        };
+        areas = [];
+        artefatos = [];
+        
+    } catch (error) {
+        console.error('💥 Erro crítico ao carregar projeto:', error);
+        // Fallback para projeto demo
+        projetoAtual = {
+            id: 'demo-' + Date.now(),
+            nome: "Sítio Arqueológico Demo",
+            largura_m: 20,
+            altura_m: 15,
+            escala: 50
+        };
+        areas = [];
+        artefatos = [];
+    }
+    
+    inicializarEditor();
+}
+function voltarDashboard() {
+    // Sempre permite voltar sem alertas
+    window.location.href = '/dashboard';
+}
+        function inicializarEditor() {
+            // Configurar informações do projeto
+            document.getElementById('projectName').textContent = projetoAtual.nome;
+            const largura = projetoAtual.largura_m;
+            const altura = projetoAtual.altura_m;
+            const escala = projetoAtual.escala;
+            
+            document.getElementById('infoDimensoes').textContent = `${largura}m × ${altura}m`;
+            document.getElementById('infoEscala').textContent = escala;
+            document.getElementById('infoAreaTotal').textContent = `${(largura * altura).toFixed(1)}m²`;
+
+            // Configurar canvas
+            const canvas = document.getElementById('projectCanvas');
+            const larguraPixels = largura * escala;
+            const alturaPixels = altura * escala;
+            
+            canvas.width = larguraPixels;
+            canvas.height = alturaPixels;
+
+            // Configurar área demarcada
+            const areaDiv = document.getElementById('area-demarcada');
+            areaDiv.style.width = larguraPixels + 'px';
+            areaDiv.style.height = alturaPixels + 'px';
+
+            // Centralizar na tela
+            setTimeout(centralizarCanvas, 100);
+
+            // Desenhar grade
+            desenharGrade();
+
+            // Configurar ferramentas
+            configurarFerramentas();
+
+            // Event listeners
+            canvas.addEventListener('mousemove', atualizarCoordenadas);
+            canvas.addEventListener('click', handleCanvasClick);
+            canvas.addEventListener('mousedown', iniciarArraste);
+            document.addEventListener('mousemove', moverElemento);
+            document.addEventListener('mouseup', pararArraste);
+
+            // Atualizar listas
+            atualizarListaAreas();
+            atualizarListaArtefatos();
+        }
+
+        function centralizarCanvas() {
+            const canvas = document.getElementById('projectCanvas');
+            const workspace = document.querySelector('.workspace');
+            const canvasRect = canvas.getBoundingClientRect();
+            const workspaceRect = workspace.getBoundingClientRect();
+            
+            const offsetX = (workspaceRect.width - canvasRect.width) / 2;
+            const offsetY = (workspaceRect.height - canvasRect.height) / 2;
+            
+            canvas.style.position = 'absolute';
+            canvas.style.left = offsetX + 'px';
+            canvas.style.top = offsetY + 'px';
+            
+            document.getElementById('area-demarcada').style.left = offsetX + 'px';
+            document.getElementById('area-demarcada').style.top = offsetY + 'px';
+        }
+
+        function configurarFerramentas() {
+            const botoes = document.querySelectorAll('.btn-ferramenta');
+            botoes.forEach(botao => {
+                botao.addEventListener('click', function() {
+                    botoes.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    ferramentaAtual = this.dataset.ferramenta;
+                    
+                    // Remover seleção de área quando mudar de ferramenta
+                    if (ferramentaAtual !== 'selecionar') {
+                        deselecionarArea();
+                    }
+                });
+            });
+        }
+        function exportarProjeto() {
+    const dados = {
+        projeto: projetoAtual,
+        areas: areas,
+        artefatos: artefatos,
+        dataExportacao: new Date().toISOString()
+    };
+    
+    const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `projeto_${projetoAtual.nome}_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+        function selecionarFerramenta(ferramenta) {
+            const botoes = document.querySelectorAll('.btn-ferramenta');
+            botoes.forEach(b => b.classList.remove('active'));
+            document.querySelector(`[data-ferramenta="${ferramenta}"]`).classList.add('active');
+            ferramentaAtual = ferramenta;
+            
+            if (ferramenta !== 'selecionar') {
+                deselecionarArea();
+            }
+        }
+       // Função para importar projeto
+// Função para importar projeto (versão alternativa)
+// Função para importar projeto
+// Função para importar projeto
+function importarProjeto(event) {
+    const file = event.target.files[0];
+    if (!file) {
+        console.log('Nenhum arquivo selecionado');
+        return;
+    }
+    
+    console.log('Arquivo selecionado:', file.name);
+    
+    // Criar o FileReader dentro da função
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        try {
+            console.log('Arquivo lido, processando...');
+            const dados = JSON.parse(e.target.result);
+            
+            // Validar dados básicos
+            if (!dados.projeto || !dados.projeto.nome) {
+                throw new Error('Arquivo de projeto inválido');
+            }
+            
+            projetoAtual = dados.projeto;
+            areas = dados.areas || [];
+            artefatos = dados.artefatos || [];
+            
+            console.log('Dados carregados:', {
+                projeto: projetoAtual.nome,
+                areas: areas.length,
+                artefatos: artefatos.length
+            });
+            
+            // Reinicializar o editor com os novos dados
+            inicializarEditor();
+            
+            alert(`Projeto "${projetoAtual.nome}" importado com sucesso!\nÁreas: ${areas.length}\nArtefatos: ${artefatos.length}`);
+            
+        } catch (error) {
+            console.error('Erro ao processar arquivo:', error);
+            alert('Erro ao importar projeto: Arquivo inválido ou corrompido');
+        }
+    };
+    
+    reader.onerror = function() {
+        console.error('Erro ao ler arquivo');
+        alert('Erro ao ler o arquivo selecionado');
+    };
+    
+    // Iniciar a leitura do arquivo
+    reader.readAsText(file);
+    
+    // Limpar o input para permitir reimportação do mesmo arquivo
+    event.target.value = '';
+}
+
+        function desenharGrade() {
+            const canvas = document.getElementById('projectCanvas');
+            const ctx = canvas.getContext('2d');
+            const escala = projetoAtual.escala;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Grade de fundo
+            ctx.strokeStyle = '#f0f0f0';
+            ctx.lineWidth = 1;
+            
+            for (let x = 0; x <= canvas.width; x += escala) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            for (let y = 0; y <= canvas.height; y += escala) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            
+            // Marcações principais
+            ctx.strokeStyle = '#d0d0d0';
+            ctx.fillStyle = '#666';
+            ctx.font = '12px Arial';
+            
+            for (let x = 0; x <= canvas.width; x += (5 * escala)) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+                ctx.fillText((x / escala) + 'm', x + 5, 15);
+            }
+            
+            for (let y = 0; y <= canvas.height; y += (5 * escala)) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+                ctx.fillText((y / escala) + 'm', 5, y - 5);
+            }
+
+            // Desenhar áreas de escavação
+            desenharAreas();
+        }
+
+        function desenharAreas() {
+            const canvas = document.getElementById('projectCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            areas.forEach(area => {
+                // Desenhar área normal
+                ctx.fillStyle = 'rgba(76, 175, 80, 0.3)';
+                ctx.strokeStyle = '#4caf50';
+                ctx.lineWidth = 2;
+                ctx.fillRect(area.x, area.y, area.largura, area.altura);
+                ctx.strokeRect(area.x, area.y, area.largura, area.altura);
+                
+                // Se é a área selecionada, desenhar borda destacada
+                if (areaSelecionada && area.id === areaSelecionada.id) {
+                    ctx.strokeStyle = '#1976d2';
+                    ctx.lineWidth = 3;
+                    ctx.setLineDash([5, 5]);
+                    ctx.strokeRect(area.x, area.y, area.largura, area.altura);
+                    ctx.setLineDash([]);
+                }
+                
+                // Nome da área
+                ctx.fillStyle = '#2e7d32';
+                ctx.font = 'bold 14px Arial';
+                ctx.fillText(area.nome, area.x + 5, area.y + 15);
+            });
+        }
+
+        function atualizarCoordenadas(e) {
+            const canvas = document.getElementById('projectCanvas');
+            const rect = canvas.getBoundingClientRect();
+            const escala = projetoAtual.escala;
+            
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            if (x >= 0 && x <= canvas.width && y >= 0 && y <= canvas.height) {
+                const xMetros = (x / escala).toFixed(1);
+                const yMetros = (y / escala).toFixed(1);
+                document.getElementById('coordenadas').textContent = `X: ${xMetros}m, Y: ${yMetros}m`;
+            }
+        }
+
+        function handleCanvasClick(e) {
+            if (ferramentaAtual === 'area') {
+                criarAreaInterativa(e);
+            } else if (ferramentaAtual === 'selecionar') {
+                selecionarAreaCanvas(e);
+            }
+        }
+
+        function criarAreaInterativa(e) {
+            const canvas = document.getElementById('projectCanvas');
+            const rect = canvas.getBoundingClientRect();
+            const escala = projetoAtual.escala;
+            
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Criar área com tamanho padrão
+            const area = {
+                id: Date.now(),
+                nome: `Área ${areas.length + 1}`,
+                x: x - 50,
+                y: y - 50,
+                largura: 100,
+                altura: 100,
+                largura_m: 2,
+                altura_m: 2,
+                descricao: 'Nova área de escavação'
+            };
+            
+            areas.push(area);
+            selecionarArea(area.id);
+            desenharGrade();
+            
+            // Abrir modal para editar a área
+            abrirModalEdicaoArea();
+        }
+
+        function selecionarAreaCanvas(e) {
+            const canvas = document.getElementById('projectCanvas');
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Verificar se clicou em uma área
+            for (let i = areas.length - 1; i >= 0; i--) {
+                const area = areas[i];
+                if (x >= area.x && x <= area.x + area.largura &&
+                    y >= area.y && y <= area.y + area.altura) {
+                    
+                    selecionarArea(area.id);
+                    return;
+                }
+            }
+            
+            // Se não clicou em nenhuma área, deselecionar
+            deselecionarArea();
+        }
+
+        function iniciarArraste(e) {
+            if (ferramentaAtual !== 'selecionar' || !areaSelecionada) return;
+            
+            const canvas = document.getElementById('projectCanvas');
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Verificar se clicou na área
+            if (x >= areaSelecionada.x && x <= areaSelecionada.x + areaSelecionada.largura &&
+                y >= areaSelecionada.y && y <= areaSelecionada.y + areaSelecionada.altura) {
+                
+                arrastando = true;
+                offset.x = x - areaSelecionada.x;
+                offset.y = y - areaSelecionada.y;
+                
+                // Mostrar mensagem de ajuda
+                document.getElementById('mensagemEdicao').style.display = 'block';
+            }
+        }
+
+        function moverElemento(e) {
+            if (!areaSelecionada || !arrastando) return;
+            
+            const canvas = document.getElementById('projectCanvas');
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Mover área
+            areaSelecionada.x = Math.max(0, Math.min(canvas.width - areaSelecionada.largura, x - offset.x));
+            areaSelecionada.y = Math.max(0, Math.min(canvas.height - areaSelecionada.altura, y - offset.y));
+            
+            desenharGrade();
+        }
+
+        function pararArraste() {
+            arrastando = false;
+            // Ocultar mensagem de ajuda após um tempo
+            setTimeout(() => {
+                document.getElementById('mensagemEdicao').style.display = 'none';
+            }, 3000);
+        }
+
+        function selecionarArea(id) {
+            areaSelecionada = areas.find(a => a.id === id);
+            modoEdicao = true;
+            
+            // Ativar ferramenta de seleção
+            selecionarFerramenta('selecionar');
+            
+            // Mostrar botão de edição na lista
+            atualizarListaAreas();
+            
+            // Redesenhar para mostrar área selecionada
+            desenharGrade();
+        }
+
+        function deselecionarArea() {
+            areaSelecionada = null;
+            modoEdicao = false;
+            
+            // Ocultar mensagem de ajuda
+            document.getElementById('mensagemEdicao').style.display = 'none';
+            
+            // Atualizar lista
+            atualizarListaAreas();
+            
+            // Redesenhar
+            desenharGrade();
+        }
+
+        // Sistema de Áreas
+        function adicionarArea() {
+            // Criar uma nova área no centro
+            const canvas = document.getElementById('projectCanvas');
+            const escala = projetoAtual.escala;
+            
+            const area = {
+                id: Date.now(),
+                nome: `Área ${areas.length + 1}`,
+                x: canvas.width / 2 - 50,
+                y: canvas.height / 2 - 50,
+                largura: 100,
+                altura: 100,
+                largura_m: 2,
+                altura_m: 2,
+                descricao: 'Nova área de escavação'
+            };
+            
+            areas.push(area);
+            selecionarArea(area.id);
+            desenharGrade();
+            
+            // Abrir modal para editar a área
+            abrirModalEdicaoArea();
+        }
+
+        function abrirModalEdicaoArea() {
+            if (!areaSelecionada) return;
+            
+            // Preencher formulário com dados da área selecionada
+            document.getElementById('inputNomeArea').value = areaSelecionada.nome;
+            document.getElementById('inputDescArea').value = areaSelecionada.descricao;
+            document.getElementById('inputLarguraArea').value = areaSelecionada.largura_m;
+            document.getElementById('inputAlturaArea').value = areaSelecionada.altura_m;
+            
+            // Alterar texto do botão para "Salvar Alterações"
+            document.getElementById('btnConfirmarArea').textContent = 'Salvar Alterações';
+            document.getElementById('tituloModalArea').textContent = '✏️ Editar Área de Escavação';
+            document.getElementById('btnVoltarEdicao').style.display = 'inline-block';
+            
+            // Mostrar modal
+            document.getElementById('modalArea').style.display = 'flex';
+        }
+
+        function confirmarArea() {
+            const nome = document.getElementById('inputNomeArea').value;
+            const descricao = document.getElementById('inputDescArea').value;
+            const largura_m = parseFloat(document.getElementById('inputLarguraArea').value);
+            const altura_m = parseFloat(document.getElementById('inputAlturaArea').value);
+
+            if (!nome) {
+                alert('Por favor, informe o nome da área.');
+                return;
+            }
+
+            if (!largura_m || !altura_m || largura_m <= 0 || altura_m <= 0) {
+                alert('Por favor, informe dimensões válidas para a área.');
+                return;
+            }
+
+            const escala = projetoAtual.escala;
+            const largura = largura_m * escala;
+            const altura = altura_m * escala;
+
+            if (areaSelecionada) {
+                // Editar área existente
+                areaSelecionada.nome = nome;
+                areaSelecionada.descricao = descricao;
+                areaSelecionada.largura = largura;
+                areaSelecionada.altura = altura;
+                areaSelecionada.largura_m = largura_m;
+                areaSelecionada.altura_m = altura_m;
+            }
+
+            atualizarListaAreas();
+            desenharGrade();
+            fecharModal();
+            
+            // Manter a área selecionada após fechar o modal
+            modoEdicao = true;
+        }
+
+        function voltarParaEdicao() {
+            // Fechar o modal
+            fecharModal();
+            
+            // Manter a área selecionada para edição
+            if (areaSelecionada) {
+                modoEdicao = true;
+                
+                // Mostrar mensagem informativa
+                document.getElementById('mensagemEdicao').style.display = 'block';
+                
+                // Ativar a ferramenta de seleção
+                selecionarFerramenta('selecionar');
+            }
+        }
+
+        function atualizarListaAreas() {
+            const lista = document.getElementById('lista-areas');
+            
+            if (areas.length === 0) {
+                lista.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">Nenhuma área adicionada</p>';
+                return;
+            }
+
+            lista.innerHTML = areas.map(area => {
+                const selecionada = areaSelecionada && areaSelecionada.id === area.id;
+                return `
+                <div class="item-lista ${selecionada ? 'selecionado' : ''}" onclick="selecionarArea(${area.id})">
+                    <div class="item-header">
+                        <span class="item-nome">${area.nome}</span>
+                        <span class="item-tipo">Área</span>
+                    </div>
+                    <div class="item-detalhes">
+                        📏 ${area.largura_m}m × ${area.altura_m}m
+                        ${selecionada ? '<br><small>🖱️ Clique para editar ou arraste para mover</small>' : ''}
+                    </div>
+                    ${selecionada ? `
+                    <div style="margin-top: 8px; display: flex; gap: 5px;">
+                        <button class="btn btn-warning btn-sm" onclick="abrirModalEdicaoArea()" style="padding: 5px 10px; font-size: 12px;">✏️ Editar</button>
+                        <button class="btn btn-danger btn-sm" onclick="excluirArea(${area.id})" style="padding: 5px 10px; font-size: 12px;">🗑️ Excluir</button>
+                    </div>
+                    ` : ''}
+                </div>
+            `}).join('');
+        }
+
+        function excluirArea(id) {
+            if (confirm('Tem certeza que deseja excluir esta área?')) {
+                areas = areas.filter(area => area.id !== id);
+                
+                if (areaSelecionada && areaSelecionada.id === id) {
+                    deselecionarArea();
+                }
+                
+                atualizarListaAreas();
+                desenharGrade();
+            }
+        }
+
+        // Sistema de Artefatos
+        function adicionarArtefato() {
+            document.getElementById('modalArtefato').style.display = 'flex';
+            document.getElementById('inputNome').value = '';
+            document.getElementById('inputProfundidade').value = '';
+            document.getElementById('inputDescricao').value = '';
+        }
+
+        function confirmarArtefato() {
+            const nome = document.getElementById('inputNome').value;
+            const material = document.getElementById('inputMaterial').value;
+            const profundidade = document.getElementById('inputProfundidade').value;
+            const descricao = document.getElementById('inputDescricao').value;
+
+            if (!nome) {
+                alert('Por favor, informe o nome do artefato.');
+                return;
+            }
+
+            const artefato = {
+                id: Date.now(),
+                nome: nome,
+                material: material,
+                profundidade: profundidade || '0',
+                descricao: descricao || 'Sem descrição',
+                data: new Date().toLocaleDateString('pt-BR'),
+                area: areaSelecionada ? areaSelecionada.nome : 'Geral'
+            };
+
+            artefatos.push(artefato);
+            atualizarListaArtefatos();
+            fecharModal();
+        }
+
+        function atualizarListaArtefatos() {
+            const lista = document.getElementById('lista-artefatos');
+            
+            if (artefatos.length === 0) {
+                lista.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">Nenhum artefato adicionado</p>';
+                return;
+            }
+
+            lista.innerHTML = artefatos.map(artefato => `
+                <div class="item-lista">
+                    <div class="item-header">
+                        <span class="item-nome">${artefato.nome}</span>
+                        <span class="item-tipo">${getNomeMaterial(artefato.material)}</span>
+                    </div>
+                    <div class="item-detalhes">
+                        📍 ${artefato.area} • ${artefato.profundidade}cm<br>
+                        📅 ${artefato.data}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getNomeMaterial(material) {
+            const materiais = {
+                'ceramica': 'Cerâmica',
+                'litico': 'Lítico',
+                'osso': 'Osso',
+                'metal': 'Metal',
+                'vidro': 'Vidro',
+                'outro': 'Outro'
+            };
+            return materiais[material] || material;
+        }
+
+        // Sistema de Relatório
+        function gerarRelatorio() {
+            let relatorioHTML = `
+                <h3>${projetoAtual.nome}</h3>
+                <p><strong>Data do Relatório:</strong> ${new Date().toLocaleDateString('pt-BR')}</p>
+                <p><strong>Áreas de Escavação:</strong> ${areas.length}</p>
+                <p><strong>Artefatos Encontrados:</strong> ${artefatos.length}</p>
+                
+                <h4 style="margin-top: 20px;">⛏️ Áreas de Escavação</h4>
+            `;
+            
+            if (areas.length > 0) {
+                areas.forEach((area, index) => {
+                    relatorioHTML += `
+                        <div style="border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 6px;">
+                            <p><strong>${index + 1}. ${area.nome}</strong></p>
+                            <p><strong>Dimensões:</strong> ${area.largura_m}m × ${area.altura_m}m</p>
+                            <p><strong>Descrição:</strong> ${area.descricao}</p>
+                        </div>
+                    `;
+                });
+            } else {
+                relatorioHTML += '<p>Nenhuma área de escavação cadastrada.</p>';
+            }
+            
+            relatorioHTML += '<h4 style="margin-top: 20px;">🏺 Artefatos Encontrados</h4>';
+            
+            if (artefatos.length > 0) {
+                // Resumo por material
+                const contagem = {};
+                artefatos.forEach(a => {
+                    contagem[a.material] = (contagem[a.material] || 0) + 1;
+                });
+                
+                relatorioHTML += '<p><strong>Resumo por Material:</strong></p><ul>';
+                for (const [material, quantidade] of Object.entries(contagem)) {
+                    relatorioHTML += `<li>${getNomeMaterial(material)}: ${quantidade} artefatos</li>`;
+                }
+                relatorioHTML += '</ul>';
+                
+                // Detalhes
+                artefatos.forEach((artefato, index) => {
+                    relatorioHTML += `
+                        <div style="border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 6px;">
+                            <p><strong>${index + 1}. ${artefato.nome}</strong></p>
+                            <p><strong>Área:</strong> ${artefato.area}</p>
+                            <p><strong>Material:</strong> ${getNomeMaterial(artefato.material)}</p>
+                            <p><strong>Profundidade:</strong> ${artefato.profundidade}cm</p>
+                            <p><strong>Descrição:</strong> ${artefato.descricao}</p>
+                            <p><strong>Data do Registro:</strong> ${artefato.data}</p>
+                        </div>
+                    `;
+                });
+            } else {
+                relatorioHTML += '<p>Nenhum artefato encontrado.</p>';
+            }
+            
+            document.getElementById('conteudoRelatorio').innerHTML = relatorioHTML;
+            document.getElementById('modalRelatorio').style.display = 'flex';
+        }
+
+        function imprimirRelatorio() {
+            const conteudo = document.getElementById('conteudoRelatorio').innerHTML;
+            const janela = window.open('', '_blank');
+            janela.document.write(`
+                <html>
+                    <head>
+                        <title>Relatório - ${projetoAtual.nome}</title>
+                        <style>
+                            body { font-family: Arial; margin: 20px; }
+                            h3 { color: #333; }
+                            h4 { color: #666; margin-top: 20px; }
+                        </style>
+                    </head>
+                    <body>
+                        <h2>Relatório de Escavação Arqueológica</h2>
+                        ${conteudo}
+                    </body>
+                </html>
+            `);
+            janela.document.close();
+            janela.print();
+        }
+
+        function baixarRelatorio() {
+            alert('Funcionalidade de download de PDF será implementada aqui!');
+            // Em uma implementação real, você usaria uma biblioteca como jsPDF
+        }
+
+        function baixarMapa() {
+            const canvas = document.getElementById('projectCanvas');
+            const link = document.createElement('a');
+            link.download = `mapa-${projetoAtual.nome}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+
+        // Funções de Gerenciamento
+       // Funções de Gerenciamento - ATUALIZADA
+async function salvarProjeto() {
+    try {
+        console.log('🔄 Tentando salvar projeto...', projetoAtual);
+        
+        // Salva uma cópia no localStorage sempre (como backup)
+        const dadosBackup = {
+            projeto: projetoAtual,
+            areas: areas,
+            artefatos: artefatos,
+            dataSalvamento: new Date().toISOString()
+        };
+        
+        const chaveLocalStorage = `projeto_${projetoAtual.id}`;
+        localStorage.setItem(chaveLocalStorage, JSON.stringify(dadosBackup));
+        console.log('✅ Backup salvo no localStorage:', chaveLocalStorage);
+        
+        // Verificar se temos um projeto válido
+        if (!projetoAtual || projetoAtual.id.startsWith('demo-')) {
+            console.log('📝 Criando novo projeto...');
+            
+            const response = await fetch('/api/projetos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    nome: projetoAtual.nome,
+                    descricao: 'Projeto arqueológico',
+                    localizacao: 'Local não especificado',
+                    largura_m: projetoAtual.largura_m,
+                    altura_m: projetoAtual.altura_m,
+                    escala: projetoAtual.escala,
+                    areas: areas,
+                    artefatos: artefatos
+                })
+            });
+            
+            console.log('📤 Resposta POST:', response.status, response.statusText);
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('✅ Projeto criado:', data);
+                
+                // Atualiza o ID do projeto
+                const projetoAntigoId = projetoAtual.id;
+                projetoAtual.id = data.projetoId;
+                
+                // Atualiza o localStorage com o novo ID
+                localStorage.removeItem(`projeto_${projetoAntigoId}`);
+                localStorage.setItem(`projeto_${projetoAtual.id}`, JSON.stringify(dadosBackup));
+                
+                // Atualiza a URL sem recarregar a página
+                window.history.replaceState({}, '', `/editor/${projetoAtual.id}`);
+                
+                alert(`✅ Projeto criado e salvo com sucesso!\nÁreas: ${areas.length}\nArtefatos: ${artefatos.length}`);
+            } else {
+                throw new Error('Erro ao criar projeto na API');
+            }
+        } else {
+            console.log('📝 Atualizando projeto existente...', projetoAtual.id);
+            
+            const response = await fetch(`/api/projetos/${projetoAtual.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    nome: projetoAtual.nome,
+                    descricao: 'Projeto arqueológico atualizado',
+                    localizacao: 'Local não especificado',
+                    largura_m: projetoAtual.largura_m,
+                    altura_m: projetoAtual.altura_m,
+                    escala: projetoAtual.escala,
+                    areas: areas,
+                    artefatos: artefatos
+                })
+            });
+            
+            console.log('📤 Resposta PUT:', response.status, response.statusText);
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('✅ Projeto atualizado:', data);
+                alert(`✅ Projeto salvo com sucesso!\nÁreas: ${areas.length}\nArtefatos: ${artefatos.length}`);
+            } else {
+                throw new Error('Erro ao atualizar projeto na API');
+            }
+        }
+    } catch (error) {
+        console.error('❌ Erro ao salvar projeto:', error);
+        alert(`✅ Projeto salvo localmente!\nÁreas: ${areas.length}\nArtefatos: ${artefatos.length}\n\nDados salvos no navegador.`);
+    }
+}
+
+        function fecharModal() {
+            document.getElementById('modalArea').style.display = 'none';
+            document.getElementById('modalArtefato').style.display = 'none';
+            document.getElementById('modalRelatorio').style.display = 'none';
+            areaEditando = null;
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', carregarProjeto);
+    </script>
+</body>
+</html>

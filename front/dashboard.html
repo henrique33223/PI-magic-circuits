@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <style>
+        *{margin:0;padding:0;}
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        .user-info { background: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+        .btn { padding: 10px 15px; margin: 5px; border: none; border-radius: 3px; cursor: pointer; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .nav {
+    width: 100%;
+    height: 70px;
+    background: #121212;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 40px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+  
+  .logo {
+    font-size: 1.4rem;
+    font-weight: bold;
+  }
+  
+  .nav-links {
+    list-style: none;
+    display: flex;
+    gap: 100px;
+  }
+  
+  .nav-links a {
+    text-decoration: none;
+    color: #fff;
+    font-size: 1.4rem;
+    transition: 0.3s;
+  }
+  
+  .nav-links a:hover {
+    opacity: 0.7;
+    
+  }
+  
+  .btn {
+    padding: 10px 20px;
+    background: #00aaff;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: 0.3s;
+    margin-right: 30px;
+  }
+  
+  .btn:hover {
+    opacity: 0.8;
+   
+  }
+    </style>
+</head>
+<body>
+    <div id="nav_container"></div>
+    
+    <div class="user-info">
+        <h2>Dashboard</h2>
+        <p>Bem-vindo, <span id="userName">Carregando...</span>!</p>
+        <p>Email: <span id="userEmail">Carregando...</span></p>
+        <p>ID: <span id="userId">Carregando...</span></p>
+    </div>
+
+    <div>
+        <h3>Seus Projetos Arqueológicos</h3>
+        <button class="btn btn-primary" onclick="mostrarModalCriarProjeto()">Novo Projeto</button>
+        <button class="btn btn-danger" onclick="logout()">Sair</button>
+        <div id="projetosList"></div>
+    </div>
+    <script src="front.js"></script>
+    <script>
+        // Carrega a navegação
+      
+
+        // Verifica se está logado e carrega dados do usuário
+        async function carregarUsuario() {
+            try {
+                const response = await fetch('/api/user');
+                
+                if (!response.ok) {
+                    throw new Error('Não autorizado');
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('userName').textContent = data.user.nome;
+                    document.getElementById('userEmail').textContent = data.user.email;
+                    document.getElementById('userId').textContent = data.user.id;
+                    
+                    // Carrega os projetos do usuário
+                    carregarProjetos();
+                }
+            } catch (error) {
+                console.error('Erro ao carregar usuário:', error);
+                alert('Sessão expirada. Faça login novamente.');
+                window.location.href = '/go_entrar';
+            }
+        }
+
+        // Carrega projetos do usuário
+        // Carrega projetos do usuário
+        async function carregarProjetos() {
+    try {
+        const response = await fetch('/api/projetos');
+        const data = await response.json();
+        
+        const projetosList = document.getElementById('projetosList');
+        
+        if (data.projetos && data.projetos.length > 0) {
+            projetosList.innerHTML = data.projetos.map(projeto => `
+                <div class="projeto-item">
+                    <div style="flex: 1;">
+                        <h4 style="margin: 0 0 8px 0; color: #333;">${projeto.nome}</h4>
+                        <p style="margin: 0 0 5px 0; color: #666;">
+                            <strong>Descrição:</strong> ${projeto.descricao || 'Sem descrição'}
+                        </p>
+                        <p style="margin: 0 0 5px 0; color: #666;">
+                            <strong>Localização:</strong> ${projeto.localizacao || 'Não informada'}
+                        </p>
+                        <p style="margin: 0; color: #888; font-size: 0.8em;">
+                            Criado em: ${new Date(projeto.data_criacao).toLocaleDateString('pt-BR')}
+                        </p>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-success" onclick="abrirProjeto(${projeto.id})">
+                            🎨 Abrir
+                        </button>
+                        <button class="btn btn-primary" onclick="editarProjeto(${projeto.id})">
+                            ✏️ Editar
+                        </button>
+                        <button class="btn btn-danger" onclick="deletarProjeto(${projeto.id}, '${projeto.nome.replace(/'/g, "\\'")}')">
+                            🗑️ Excluir
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            projetosList.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #666;">
+                    <h3>Nenhum projeto encontrado</h3>
+                    <p>Crie seu primeiro projeto clicando no botão "Novo Projeto"</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Erro ao carregar projetos:', error);
+        projetosList.innerHTML = '<p style="color: red;">Erro ao carregar projetos</p>';
+    }
+}
+        // Logout
+        async function logout() {
+            try {
+                const response = await fetch('/logout', { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.success) {
+                    window.location.href = '/go_entrar';
+                }
+            } catch (error) {
+                console.error('Erro no logout:', error);
+                window.location.href = '/go_entrar';
+            }
+        }
+
+        // Função para deletar projeto
+async function deletarProjeto(projetoId, projetoNome) {
+    const confirmacao = confirm(`Tem certeza que deseja excluir o projeto "${projetoNome}"?\n\nEsta ação não pode ser desfeita e irá excluir todas as áreas e artefatos relacionados.`);
+    
+    if (!confirmacao) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/projetos/${projetoId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            alert('Projeto excluído com sucesso!');
+            // Recarrega a lista de projetos
+            carregarProjetos();
+        } else {
+            alert(data.error || 'Erro ao excluir projeto');
+        }
+    } catch (error) {
+        console.error('Erro ao deletar projeto:', error);
+        alert('Erro ao excluir projeto. Tente novamente.');
+    }
+}
+        // Criar novo projeto
+        // Criar novo projeto e ir para o editor
+// Modal para criar projeto com dimensões
+function mostrarModalCriarProjeto() {
+    const modalHTML = `
+        <div id="modalCriarProjeto" style="
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        ">
+            <div style="
+                background: white;
+                padding: 30px;
+                border-radius: 10px;
+                width: 90%;
+                max-width: 500px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            ">
+                <h2 style="margin-bottom: 20px;">Criar Novo Projeto</h2>
+                
+                <div class="form-group">
+                    <label>Nome do Projeto:</label>
+                    <input type="text" id="novoProjetoNome" style="width: 100%; padding: 10px; margin: 5px 0;" placeholder="Ex: Sítio Arqueológico X">
+                </div>
+                
+                <div class="form-group">
+                    <label>Descrição:</label>
+                    <textarea id="novoProjetoDescricao" style="width: 100%; padding: 10px; margin: 5px 0; height: 80px;" placeholder="Descrição do local..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Localização:</label>
+                    <input type="text" id="novoProjetoLocalizacao" style="width: 100%; padding: 10px; margin: 5px 0;" placeholder="Ex: Município, Estado">
+                </div>
+                
+                <h3 style="margin: 20px 0 10px 0;">Dimensões do Local</h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Largura (metros):</label>
+                        <input type="number" id="novoProjetoLargura" value="10.0" step="0.1" min="1" style="width: 100%; padding: 10px;">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Altura (metros):</label>
+                        <input type="number" id="novoProjetoAltura" value="8.0" step="0.1" min="1" style="width: 100%; padding: 10px;">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Escala (pixels por metro):</label>
+                    <select id="novoProjetoEscala" style="width: 100%; padding: 10px; margin: 5px 0;">
+                        <option value="20">20 px/m (Visão geral)</option>
+                        <option value="50" selected>50 px/m (Padrão)</option>
+                        <option value="100">100 px/m (Detalhado)</option>
+                        <option value="200">200 px/m (Muito detalhado)</option>
+                    </select>
+                    <small style="color: #666;">Maior escala = mais detalhes, mas arquivo maior</small>
+                </div>
+                
+                <div style="
+                    display: grid; 
+                    grid-template-columns: 1fr 1fr; 
+                    gap: 10px; 
+                    margin-top: 20px;
+                ">
+                    <button onclick="fecharModalCriarProjeto()" style="
+                        padding: 12px; 
+                        background: #6c757d; 
+                        color: white; 
+                        border: none; 
+                        border-radius: 5px; 
+                        cursor: pointer;
+                    ">Cancelar</button>
+                    
+                    <button onclick="confirmarCriarProjeto()" style="
+                        padding: 12px; 
+                        background: #28a745; 
+                        color: white; 
+                        border: none; 
+                        border-radius: 5px; 
+                        cursor: pointer;
+                    ">Criar Projeto</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+function fecharModalCriarProjeto() {
+    const modal = document.getElementById('modalCriarProjeto');
+    if (modal) modal.remove();
+}
+
+async function confirmarCriarProjeto() {
+    const nome = document.getElementById('novoProjetoNome').value;
+    const descricao = document.getElementById('novoProjetoDescricao').value;
+    const localizacao = document.getElementById('novoProjetoLocalizacao').value;
+    const largura_m = parseFloat(document.getElementById('novoProjetoLargura').value);
+    const altura_m = parseFloat(document.getElementById('novoProjetoAltura').value);
+    const escala = parseInt(document.getElementById('novoProjetoEscala').value);
+
+    if (!nome.trim()) {
+        alert('Nome do projeto é obrigatório');
+        return;
+    }
+
+    if (largura_m <= 0 || altura_m <= 0) {
+        alert('Dimensões devem ser maiores que zero');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/projetos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                nome: nome,
+                descricao: descricao,
+                localizacao: localizacao,
+                largura_m: largura_m,
+                altura_m: altura_m,
+                escala: escala
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            fecharModalCriarProjeto();
+            
+            // Calcula o tamanho do canvas baseado nas dimensões reais
+            const larguraPixels = largura_m * escala;
+            const alturaPixels = altura_m * escala;
+            
+            alert(`Projeto criado!\nDimensões: ${largura_m}m x ${altura_m}m\nCanvas: ${larguraPixels}px x ${alturaPixels}px`);
+            
+            // Redireciona para o editor
+            window.location.href = `/editor/${data.projetoId}`;
+        } else {
+            alert(data.error || 'Erro ao criar projeto');
+        }
+    } catch (error) {
+        console.error('Erro ao criar projeto:', error);
+        alert('Erro ao criar projeto');
+    }
+}
+
+// Modifique o botão no dashboard para usar o modal
+// No seu HTML, mude para:
+// <button class="btn btn-primary" onclick="mostrarModalCriarProjeto()">Novo Projeto</button>
+
+// Adicione também um botão para abrir projetos existentes
+function abrirProjeto(projetoId) {
+    console.log('Abrindo projeto ID:', projetoId);
+    // Redireciona para o editor com o ID do projeto
+    window.location.href = `/editor/${projetoId}`;
+}
+function editarProjeto(projetoId) {
+    console.log('Editando projeto ID:', projetoId);
+    window.location.href = `/editor/${projetoId}`;
+}
+        // Carrega os dados quando a página abre
+        document.addEventListener('DOMContentLoaded', carregarUsuario);
+    </script>
+</body>
+</html>

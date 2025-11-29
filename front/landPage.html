@@ -1,19 +1,534 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArqueoMap - Mapeamento Arqueológico Inteligente</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f8f9fa;
+            overflow-x: hidden;
+        }
+        
+        /* NAVEGAÇÃO */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 5%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .nav.scrolled {
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c5530;
+            z-index: 1001;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            z-index: 1001;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: #2c5530;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #2c5530;
+            transition: width 0.3s;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .auth-buttons {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            z-index: 1001;
+        }
+
+        .btn {
+            padding: 0.6rem 1.5rem;
+            background: #2c5530;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .btn:hover {
+            background: #1e3a22;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        /* SEÇÃO HERO */
+        #comeceJa {
+            background: linear-gradient(135deg, #2c5530 0%, #4a7c59 100%);
+            color: white;
+            padding: 140px 20px 100px;
+            text-align: center;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #comeceJa::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" opacity="0.05"><polygon fill="white" points="0,1000 1000,0 1000,1000"/></svg>');
+            background-size: cover;
+        }
+
+        #comeceJa h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+            font-weight: 700;
+            position: relative;
+            z-index: 2;
+        }
+
+        #comeceJa p {
+            font-size: 1.3rem;
+            margin-bottom: 3rem;
+            max-width: 600px;
+            opacity: 0.9;
+            position: relative;
+            z-index: 2;
+        }
+
+        #comeceJa .btn {
+            background: #ffc107;
+            color: #212529;
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        #comeceJa .btn:hover {
+            background: #e0a800;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        /* SEÇÃO FUNCIONALIDADES */
+        #Ex1 {
+            padding: 100px 20px;
+            text-align: center;
+            background: white;
+            position: relative;
+            z-index: 1;
+        }
+
+        #Ex1 h1 {
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: #2c5530;
+            font-weight: 700;
+        }
+
+        #imgEx1 {
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        #imgEx1 p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            color: #666;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #imgEx1 img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+            border: 1px solid #e9ecef;
+            transition: transform 0.3s ease;
+        }
+
+        #imgEx1 img:hover {
+            transform: scale(1.02);
+        }
+
+        /* SEÇÃO RECURSOS */
+        #Ex2 {
+            padding: 100px 20px;
+            background: #f8f9fa;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        #Ex2 h1 {
+            color: #2c5530;
+            margin-bottom: 3rem;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .recursos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .recurso {
+            background: white;
+            padding: 2.5rem 2rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .recurso:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+
+        .recurso h3 {
+            color: #2c5530;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .recurso p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* RODAPÉ */
+        .footer {
+            background: #2c5530;
+            color: white;
+            padding: 3rem 20px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .footer p {
+            opacity: 0.8;
+        }
+
+        /* RESPONSIVIDADE */
+        @media (max-width: 768px) {
+            .nav {
+                padding: 1rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            #comeceJa {
+                padding: 120px 20px 80px;
+            }
+
+            #comeceJa h1 {
+                font-size: 2.5rem;
+            }
+
+            #comeceJa p {
+                font-size: 1.1rem;
+            }
+
+            #Ex1 h1, #Ex2 h1 {
+                font-size: 2rem;
+            }
+
+            .recursos-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .recurso {
+                padding: 2rem 1.5rem;
+            }
+        }
+
+        /* MENU MOBILE */
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #2c5530;
+            z-index: 1002;
+        }
+
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: block;
+            }
+
+            .nav-links.active {
+                display: flex;
+                flex-direction: column;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                background: white;
+                padding: 1rem;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            }
+        }
+    </style>
 </head>
 <body>
-    <div id="nav_container"></div>
-      <section class="anton" id="comeceJa">
-        <h1>Quer criar um<br> mapa digital intelegente?</h1>
-        <p>Nosso serviço tem foco nos arqueólogos que precisam mapear  todo o sítio arqueológico.</p>
-        <a class="btn" href="login1.html">Comece Já!</a>
-      </section>
-      <script src="front.js"></script>
+    <!-- Navegação -->
+    <nav class="nav" id="mainNav">
+        <div class="logo">ArqueoMap</div>
+        
+        <button class="menu-toggle" id="menuToggle">☰</button>
+        
+        <ul class="nav-links" id="navLinks">
+            <li><a href="#comeceJa">Início</a></li>
+            <li><a href="#Ex1">Funcionalidades</a></li>
+            <li><a href="#Ex2">Recursos</a></li>
+            <li><a href="sobre.html">Sobre</a></li>
+        </ul>
+        
+        <div class="auth-buttons" id="authButtons">
+            <!-- Carregado via JavaScript -->
+        </div>
+    </nav>
+    
+    <!-- Conteúdo Principal -->
+    <section class="anton" id="comeceJa">
+        <h1>Quer criar um<br> mapa digital inteligente?</h1>
+        <p>Nosso serviço tem foco nos arqueólogos que precisam mapear todo o sítio arqueológico de forma precisa e organizada.</p>
+        <a class="btn" href="entrar.html" id="mainButton">Comece Já!</a>
+    </section>
+    
+    <section id="Ex1" class="anton">
+        <h1>Funcionalidades</h1>
+        
+        <div id="imgEx1">
+            <p>Mapa para divisão de áreas de escavação com ferramentas de precisão.</p>
+            <img src="front/imgs/imgEx.png" alt="Exemplo de mapa arqueológico digital" onerror="this.style.display='none'">
+        </div>
+    </section>
+    
+    <section id="Ex2" class="anton">
+        <h1>Recursos Principais</h1>
+        
+        <div class="recursos-grid">
+            <div class="recurso">
+                <h3>🎯 Mapeamento Preciso</h3>
+                <p>Divisão exata de áreas de escavação com coordenadas precisas e escala customizável.</p>
+            </div>
+            
+            <div class="recurso">
+                <h3>📊 Gestão de Artefatos</h3>
+                <p>Registro e catalogação de artefatos encontrados em cada área de escavação.</p>
+            </div>
+            
+            <div class="recurso">
+                <h3>📋 Relatórios Automáticos</h3>
+                <p>Geração de relatórios detalhados com estatísticas e informações do sítio arqueológico.</p>
+            </div>
+            
+            <div class="recurso">
+                <h3>💾 Salvamento em Nuvem</h3>
+                <p>Seus projetos são salvos automaticamente e podem ser acessados de qualquer lugar.</p>
+            </div>
+            
+            <div class="recurso">
+                <h3>🔄 Colaboração em Equipe</h3>
+                <p>Trabalhe em equipe compartilhando projetos e dados com outros pesquisadores.</p>
+            </div>
+            
+            <div class="recurso">
+                <h3>📱 Interface Intuitiva</h3>
+                <p>Design moderno e fácil de usar, mesmo para quem não tem experiência com tecnologia.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <p>&copy; 2024 ArqueoMap. Todos os direitos reservados.</p>
+    </footer>
+
+    <script>
+        // Gerenciamento de estado de login
+        async function updateAuthUI() {
+            try {
+                const response = await fetch('/api/check-auth');
+                const data = await response.json();
+                
+                const authButtons = document.getElementById('authButtons');
+                const mainButton = document.getElementById('mainButton');
+                
+                if (data.loggedIn) {
+                    // Usuário logado
+                    authButtons.innerHTML = `
+                        <span style="color: #333; margin-right: 1rem;">Olá, ${data.user.nome}</span>
+                        <a class="btn" href="/dashboard">📊 Dashboard</a>
+                        <button class="btn btn-secondary" onclick="logout()">🚪 Sair</button>
+                    `;
+                    
+                    if (mainButton) {
+                        mainButton.textContent = 'Acessar Dashboard';
+                        mainButton.href = '/dashboard';
+                    }
+                } else {
+                    // Usuário não logado
+                    authButtons.innerHTML = `
+                        <a class="btn" href="entrar.html">Entrar</a>
+                    `;
+                    
+                    if (mainButton) {
+                        mainButton.textContent = 'Comece Já!';
+                        mainButton.href = 'entrar.html';
+                    }
+                }
+            } catch (error) {
+                console.log('Erro ao verificar autenticação:', error);
+            }
+        }
+
+        // Função de logout
+        async function logout() {
+            try {
+                const response = await fetch('/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    window.location.href = '/';
+                } else {
+                    alert('Erro ao fazer logout');
+                }
+            } catch (error) {
+                console.error('Erro no logout:', error);
+                window.location.href = '/';
+            }
+        }
+
+        // Menu mobile
+        document.getElementById('menuToggle').addEventListener('click', function() {
+            const navLinks = document.getElementById('navLinks');
+            navLinks.classList.toggle('active');
+        });
+
+        // Scroll effect na navegação
+        window.addEventListener('scroll', function() {
+            const nav = document.getElementById('mainNav');
+            if (window.scrollY > 100) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        });
+
+        // Fechar menu mobile ao clicar em um link
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', function() {
+                const navLinks = document.getElementById('navLinks');
+                navLinks.classList.remove('active');
+            });
+        });
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            updateAuthUI();
+            
+            // Smooth scroll para âncoras
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>

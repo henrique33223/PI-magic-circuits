@@ -3,89 +3,638 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>Dashboard - ArqueoMap</title>
     <style>
-        *{margin:0;padding:0;}
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-        .user-info { background: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
-        .btn { padding: 10px 15px; margin: 5px; border: none; border-radius: 3px; cursor: pointer; }
-        .btn-primary { background: #007bff; color: white; }
-        .btn-danger { background: #dc3545; color: white; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* NAVEGAÇÃO FIXA */
         .nav {
-    width: 100%;
-    height: 70px;
-    background: #121212;
-    color: #fff;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 40px;
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-  }
-  
-  .logo {
-    font-size: 1.4rem;
-    font-weight: bold;
-  }
-  
-  .nav-links {
-    list-style: none;
-    display: flex;
-    gap: 100px;
-  }
-  
-  .nav-links a {
-    text-decoration: none;
-    color: #fff;
-    font-size: 1.4rem;
-    transition: 0.3s;
-  }
-  
-  .nav-links a:hover {
-    opacity: 0.7;
-    
-  }
-  
-  .btn {
-    padding: 10px 20px;
-    background: #00aaff;
-    color: #fff;
-    text-decoration: none;
-    border-radius: 6px;
-    transition: 0.3s;
-    margin-right: 30px;
-  }
-  
-  .btn:hover {
-    opacity: 0.8;
-   
-  }
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c5530;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: #2c5530;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #2c5530;
+            transition: width 0.3s;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .auth-buttons {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        /* CONTEÚDO PRINCIPAL */
+        .container {
+            max-width: 1200px;
+            margin: 100px auto 40px;
+            padding: 0 2rem;
+        }
+
+        /* HEADER DO DASHBOARD */
+        .dashboard-header {
+            background: linear-gradient(135deg, #2c5530 0%, #4a7c59 100%);
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dashboard-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" opacity="0.05"><polygon fill="white" points="0,1000 1000,0 1000,1000"/></svg>');
+            background-size: cover;
+        }
+
+        .dashboard-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            position: relative;
+            z-index: 2;
+        }
+
+        .dashboard-header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* INFO DO USUÁRIO */
+        .user-info {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .info-card {
+            text-align: center;
+            padding: 1.5rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #2c5530;
+        }
+
+        .info-card h3 {
+            color: #2c5530;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .info-card p {
+            color: #666;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        /* BOTÕES */
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #2c5530;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1e3a22;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(44, 85, 48, 0.3);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        /* LISTA DE PROJETOS */
+        .projetos-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .section-header h2 {
+            color: #2c5530;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .projetos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .projeto-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .projeto-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-color: #2c5530;
+        }
+
+        .projeto-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .projeto-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c5530;
+            margin-bottom: 0.5rem;
+        }
+
+        .projeto-meta {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .projeto-stats {
+            display: flex;
+            gap: 1rem;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .stat {
+            text-align: center;
+            flex: 1;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2c5530;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .projeto-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        /* ESTADO VAZIO */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #666;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #2c5530;
+        }
+
+        .empty-state p {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+
+        /* MODAL MODERNO */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 16px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .modal-content h2 {
+            color: #2c5530;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #2c5530;
+            box-shadow: 0 0 0 3px rgba(44, 85, 48, 0.1);
+        }
+
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .modal-actions .btn {
+            flex: 1;
+            justify-content: center;
+        }
+
+        /* RESPONSIVIDADE */
+        @media (max-width: 768px) {
+            .nav {
+                padding: 1rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .container {
+                margin-top: 80px;
+                padding: 0 1rem;
+            }
+
+            .dashboard-header {
+                padding: 2rem 1rem;
+            }
+
+            .dashboard-header h1 {
+                font-size: 2rem;
+            }
+
+            .projetos-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .projeto-actions {
+                justify-content: center;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ANIMAÇÕES */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .projeto-card {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        /* SCROLLBAR PERSONALIZADA */
+        .modal-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .modal-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb {
+            background: #2c5530;
+            border-radius: 3px;
+        }
     </style>
 </head>
 <body>
-    <div id="nav_container"></div>
-    
-    <div class="user-info">
-        <h2>Dashboard</h2>
-        <p>Bem-vindo, <span id="userName">Carregando...</span>!</p>
-        <p>Email: <span id="userEmail">Carregando...</span></p>
-        <p>ID: <span id="userId">Carregando...</span></p>
+    <!-- Navegação -->
+    <nav class="nav">
+        <div class="logo">ArqueoMap</div>
+        
+        <ul class="nav-links">
+            <li><a href="/">Início</a></li>
+            <li><a href="/dashboard" style="color: #2c5530;">Dashboard</a></li>
+            <li><a href="/sobre">Sobre</a></li>
+        </ul>
+        
+        <div class="auth-buttons" id="authButtons">
+            <!-- Carregado via JavaScript -->
+        </div>
+    </nav>
+
+    <!-- Conteúdo Principal -->
+    <div class="container">
+        <!-- Header do Dashboard -->
+        <div class="dashboard-header">
+            <h1>📊 Dashboard Arqueológico</h1>
+            <p>Gerencie seus projetos de escavação arqueológica</p>
+        </div>
+
+        <!-- Informações do Usuário -->
+        <div class="user-info">
+            <div class="info-card">
+                <h3>👤 Nome</h3>
+                <p id="userName">Carregando...</p>
+            </div>
+            <div class="info-card">
+                <h3>📧 Email</h3>
+                <p id="userEmail">Carregando...</p>
+            </div>
+            <div class="info-card">
+                <h3>🆔 ID do Usuário</h3>
+                <p id="userId">Carregando...</p>
+            </div>
+        </div>
+
+        <!-- Seção de Projetos -->
+        <div class="projetos-section">
+            <div class="section-header">
+                <h2>⛏️ Seus Projetos Arqueológicos</h2>
+                <div>
+                    <button class="btn btn-primary" onclick="mostrarModalCriarProjeto()">
+                        ➕ Novo Projeto
+                    </button>
+                    <button class="btn btn-secondary" onclick="logout()">
+                        🚪 Sair
+                    </button>
+                </div>
+            </div>
+
+            <div id="projetosList">
+                <div class="empty-state">
+                    <h3>Nenhum projeto encontrado</h3>
+                    <p>Crie seu primeiro projeto para começar a mapear sítios arqueológicos</p>
+                    <button class="btn btn-primary" onclick="mostrarModalCriarProjeto()">
+                        ➕ Criar Primeiro Projeto
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div>
-        <h3>Seus Projetos Arqueológicos</h3>
-        <button class="btn btn-primary" onclick="mostrarModalCriarProjeto()">Novo Projeto</button>
-        <button class="btn btn-danger" onclick="logout()">Sair</button>
-        <div id="projetosList"></div>
+    <!-- Modal para Criar Projeto -->
+    <div id="modalCriarProjeto" class="modal">
+        <div class="modal-content">
+            <h2>🚀 Criar Novo Projeto</h2>
+            
+            <div class="form-group">
+                <label>🎯 Nome do Projeto:</label>
+                <input type="text" id="novoProjetoNome" placeholder="Ex: Sítio Arqueológico X">
+            </div>
+            
+            <div class="form-group">
+                <label>📝 Descrição:</label>
+                <textarea id="novoProjetoDescricao" placeholder="Descreva o local e objetivos da pesquisa..."></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>📍 Localização:</label>
+                <input type="text" id="novoProjetoLocalizacao" placeholder="Ex: Município, Estado, País">
+            </div>
+            
+            <h3 style="margin: 1.5rem 0 1rem 0; color: #2c5530;">📏 Dimensões do Local</h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Largura (metros):</label>
+                    <input type="number" id="novoProjetoLargura" value="20.0" step="0.1" min="1">
+                </div>
+                
+                <div class="form-group">
+                    <label>Altura (metros):</label>
+                    <input type="number" id="novoProjetoAltura" value="15.0" step="0.1" min="1">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>🎚️ Escala (pixels por metro):</label>
+                <select id="novoProjetoEscala">
+                    <option value="20">20 px/m (Visão geral)</option>
+                    <option value="50" selected>50 px/m (Padrão)</option>
+                    <option value="100">100 px/m (Detalhado)</option>
+                    <option value="200">200 px/m (Muito detalhado)</option>
+                </select>
+                <small style="color: #666; display: block; margin-top: 0.5rem;">
+                    💡 Maior escala = mais detalhes, mas arquivo maior
+                </small>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="fecharModalCriarProjeto()">
+                    ❌ Cancelar
+                </button>
+                <button class="btn btn-primary" onclick="confirmarCriarProjeto()">
+                    ✅ Criar Projeto
+                </button>
+            </div>
+        </div>
     </div>
-    <script src="front.js"></script>
+
     <script>
-        // Carrega a navegação
-      
+        // Gerenciamento de autenticação
+        async function updateAuthUI() {
+            try {
+                const response = await fetch('/api/check-auth');
+                const data = await response.json();
+                
+                const authButtons = document.getElementById('authButtons');
+                
+                if (data.loggedIn) {
+                    authButtons.innerHTML = `
+                        <span style="color: #333; margin-right: 1rem;">Olá, ${data.user.nome}</span>
+                        <button class="btn btn-secondary" onclick="logout()">🚪 Sair</button>
+                    `;
+                } else {
+                    window.location.href = '/entrar.html';
+                }
+            } catch (error) {
+                console.log('Erro ao verificar autenticação:', error);
+                window.location.href = '/entrar.html';
+            }
+        }
 
-        // Verifica se está logado e carrega dados do usuário
+        // Carrega dados do usuário e projetos
         async function carregarUsuario() {
             try {
                 const response = await fetch('/api/user');
@@ -101,66 +650,123 @@
                     document.getElementById('userEmail').textContent = data.user.email;
                     document.getElementById('userId').textContent = data.user.id;
                     
-                    // Carrega os projetos do usuário
                     carregarProjetos();
                 }
             } catch (error) {
                 console.error('Erro ao carregar usuário:', error);
                 alert('Sessão expirada. Faça login novamente.');
-                window.location.href = '/go_entrar';
+                window.location.href = '/entrar.html';
             }
         }
 
         // Carrega projetos do usuário
-        // Carrega projetos do usuário
         async function carregarProjetos() {
-    try {
-        const response = await fetch('/api/projetos');
-        const data = await response.json();
-        
-        const projetosList = document.getElementById('projetosList');
-        
-        if (data.projetos && data.projetos.length > 0) {
-            projetosList.innerHTML = data.projetos.map(projeto => `
-                <div class="projeto-item">
-                    <div style="flex: 1;">
-                        <h4 style="margin: 0 0 8px 0; color: #333;">${projeto.nome}</h4>
-                        <p style="margin: 0 0 5px 0; color: #666;">
-                            <strong>Descrição:</strong> ${projeto.descricao || 'Sem descrição'}
-                        </p>
-                        <p style="margin: 0 0 5px 0; color: #666;">
-                            <strong>Localização:</strong> ${projeto.localizacao || 'Não informada'}
-                        </p>
-                        <p style="margin: 0; color: #888; font-size: 0.8em;">
-                            Criado em: ${new Date(projeto.data_criacao).toLocaleDateString('pt-BR')}
-                        </p>
+            try {
+                const response = await fetch('/api/projetos');
+                const data = await response.json();
+                
+                const projetosList = document.getElementById('projetosList');
+                
+                if (data.projetos && data.projetos.length > 0) {
+                    projetosList.innerHTML = data.projetos.map(projeto => `
+                        <div class="projeto-card">
+                            <div class="projeto-header">
+                                <div style="flex: 1;">
+                                    <div class="projeto-title">${projeto.nome}</div>
+                                    <div class="projeto-meta">
+                                        <strong>📍 Local:</strong> ${projeto.localizacao || 'Não informada'}
+                                    </div>
+                                    <div class="projeto-meta">
+                                        <strong>📅 Criado em:</strong> ${new Date(projeto.data_criacao).toLocaleDateString('pt-BR')}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="projeto-stats">
+                                <div class="stat">
+                                    <div class="stat-number">${projeto.largura_m || 0}m</div>
+                                    <div class="stat-label">Largura</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-number">${projeto.altura_m || 0}m</div>
+                                    <div class="stat-label">Altura</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-number">1:${projeto.escala || 50}</div>
+                                    <div class="stat-label">Escala</div>
+                                </div>
+                            </div>
+                            
+                            ${projeto.descricao ? `
+                                <div class="projeto-meta">
+                                    <strong>📝 Descrição:</strong> ${projeto.descricao}
+                                </div>
+                            ` : ''}
+                            
+                            <div class="projeto-actions">
+                                <button class="btn btn-success btn-sm" onclick="abrirProjeto(${projeto.id})">
+                                    🎨 Abrir
+                                </button>
+                                <button class="btn btn-primary btn-sm" onclick="editarProjeto(${projeto.id})">
+                                    ✏️ Editar
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="deletarProjeto(${projeto.id}, '${projeto.nome.replace(/'/g, "\\'")}')">
+                                    🗑️ Excluir
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    projetosList.innerHTML = `
+                        <div class="empty-state">
+                            <h3>Nenhum projeto encontrado</h3>
+                            <p>Crie seu primeiro projeto para começar a mapear sítios arqueológicos</p>
+                            <button class="btn btn-primary" onclick="mostrarModalCriarProjeto()">
+                                ➕ Criar Primeiro Projeto
+                            </button>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar projetos:', error);
+                projetosList.innerHTML = `
+                    <div class="empty-state">
+                        <h3 style="color: #dc3545;">❌ Erro ao carregar projetos</h3>
+                        <p>Tente recarregar a página ou verificar sua conexão</p>
+                        <button class="btn btn-primary" onclick="carregarProjetos()">
+                            🔄 Tentar Novamente
+                        </button>
                     </div>
-                    <div style="display: flex; gap: 10px;">
-                        <button class="btn btn-success" onclick="abrirProjeto(${projeto.id})">
-                            🎨 Abrir
-                        </button>
-                        <button class="btn btn-primary" onclick="editarProjeto(${projeto.id})">
-                            ✏️ Editar
-                        </button>
-                        <button class="btn btn-danger" onclick="deletarProjeto(${projeto.id}, '${projeto.nome.replace(/'/g, "\\'")}')">
-                            🗑️ Excluir
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-        } else {
-            projetosList.innerHTML = `
-                <div style="text-align: center; padding: 40px; color: #666;">
-                    <h3>Nenhum projeto encontrado</h3>
-                    <p>Crie seu primeiro projeto clicando no botão "Novo Projeto"</p>
-                </div>
-            `;
+                `;
+            }
         }
-    } catch (error) {
-        console.error('Erro ao carregar projetos:', error);
-        projetosList.innerHTML = '<p style="color: red;">Erro ao carregar projetos</p>';
-    }
-}
+
+        // Funções do modal (mantenha as mesmas do seu código)
+        function mostrarModalCriarProjeto() {
+            document.getElementById('modalCriarProjeto').style.display = 'flex';
+        }
+
+        function fecharModalCriarProjeto() {
+            document.getElementById('modalCriarProjeto').style.display = 'none';
+        }
+
+        async function confirmarCriarProjeto() {
+            // ... mantenha a mesma função do seu código ...
+        }
+
+        // Funções de projeto (mantenha as mesmas)
+        function abrirProjeto(projetoId) {
+            window.location.href = `/editor/${projetoId}`;
+        }
+
+        function editarProjeto(projetoId) {
+            window.location.href = `/editor/${projetoId}`;
+        }
+
+        async function deletarProjeto(projetoId, projetoNome) {
+            // ... mantenha a mesma função do seu código ...
+        }
+
         // Logout
         async function logout() {
             try {
@@ -168,217 +774,27 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    window.location.href = '/go_entrar';
+                    window.location.href = '/entrar.html';
                 }
             } catch (error) {
                 console.error('Erro no logout:', error);
-                window.location.href = '/go_entrar';
+                window.location.href = '/entrar.html';
             }
         }
 
-        // Função para deletar projeto
-async function deletarProjeto(projetoId, projetoNome) {
-    const confirmacao = confirm(`Tem certeza que deseja excluir o projeto "${projetoNome}"?\n\nEsta ação não pode ser desfeita e irá excluir todas as áreas e artefatos relacionados.`);
-    
-    if (!confirmacao) {
-        return;
-    }
-    
-    try {
-        const response = await fetch(`/api/projetos/${projetoId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            updateAuthUI();
+            carregarUsuario();
+        });
+
+        // Fechar modal ao clicar fora
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('modalCriarProjeto');
+            if (event.target === modal) {
+                fecharModalCriarProjeto();
             }
         });
-        
-        const data = await response.json();
-        
-        if (response.ok && data.success) {
-            alert('Projeto excluído com sucesso!');
-            // Recarrega a lista de projetos
-            carregarProjetos();
-        } else {
-            alert(data.error || 'Erro ao excluir projeto');
-        }
-    } catch (error) {
-        console.error('Erro ao deletar projeto:', error);
-        alert('Erro ao excluir projeto. Tente novamente.');
-    }
-}
-        // Criar novo projeto
-        // Criar novo projeto e ir para o editor
-// Modal para criar projeto com dimensões
-function mostrarModalCriarProjeto() {
-    const modalHTML = `
-        <div id="modalCriarProjeto" style="
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        ">
-            <div style="
-                background: white;
-                padding: 30px;
-                border-radius: 10px;
-                width: 90%;
-                max-width: 500px;
-                box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            ">
-                <h2 style="margin-bottom: 20px;">Criar Novo Projeto</h2>
-                
-                <div class="form-group">
-                    <label>Nome do Projeto:</label>
-                    <input type="text" id="novoProjetoNome" style="width: 100%; padding: 10px; margin: 5px 0;" placeholder="Ex: Sítio Arqueológico X">
-                </div>
-                
-                <div class="form-group">
-                    <label>Descrição:</label>
-                    <textarea id="novoProjetoDescricao" style="width: 100%; padding: 10px; margin: 5px 0; height: 80px;" placeholder="Descrição do local..."></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label>Localização:</label>
-                    <input type="text" id="novoProjetoLocalizacao" style="width: 100%; padding: 10px; margin: 5px 0;" placeholder="Ex: Município, Estado">
-                </div>
-                
-                <h3 style="margin: 20px 0 10px 0;">Dimensões do Local</h3>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div class="form-group">
-                        <label>Largura (metros):</label>
-                        <input type="number" id="novoProjetoLargura" value="10.0" step="0.1" min="1" style="width: 100%; padding: 10px;">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Altura (metros):</label>
-                        <input type="number" id="novoProjetoAltura" value="8.0" step="0.1" min="1" style="width: 100%; padding: 10px;">
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label>Escala (pixels por metro):</label>
-                    <select id="novoProjetoEscala" style="width: 100%; padding: 10px; margin: 5px 0;">
-                        <option value="20">20 px/m (Visão geral)</option>
-                        <option value="50" selected>50 px/m (Padrão)</option>
-                        <option value="100">100 px/m (Detalhado)</option>
-                        <option value="200">200 px/m (Muito detalhado)</option>
-                    </select>
-                    <small style="color: #666;">Maior escala = mais detalhes, mas arquivo maior</small>
-                </div>
-                
-                <div style="
-                    display: grid; 
-                    grid-template-columns: 1fr 1fr; 
-                    gap: 10px; 
-                    margin-top: 20px;
-                ">
-                    <button onclick="fecharModalCriarProjeto()" style="
-                        padding: 12px; 
-                        background: #6c757d; 
-                        color: white; 
-                        border: none; 
-                        border-radius: 5px; 
-                        cursor: pointer;
-                    ">Cancelar</button>
-                    
-                    <button onclick="confirmarCriarProjeto()" style="
-                        padding: 12px; 
-                        background: #28a745; 
-                        color: white; 
-                        border: none; 
-                        border-radius: 5px; 
-                        cursor: pointer;
-                    ">Criar Projeto</button>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-}
-
-function fecharModalCriarProjeto() {
-    const modal = document.getElementById('modalCriarProjeto');
-    if (modal) modal.remove();
-}
-
-async function confirmarCriarProjeto() {
-    const nome = document.getElementById('novoProjetoNome').value;
-    const descricao = document.getElementById('novoProjetoDescricao').value;
-    const localizacao = document.getElementById('novoProjetoLocalizacao').value;
-    const largura_m = parseFloat(document.getElementById('novoProjetoLargura').value);
-    const altura_m = parseFloat(document.getElementById('novoProjetoAltura').value);
-    const escala = parseInt(document.getElementById('novoProjetoEscala').value);
-
-    if (!nome.trim()) {
-        alert('Nome do projeto é obrigatório');
-        return;
-    }
-
-    if (largura_m <= 0 || altura_m <= 0) {
-        alert('Dimensões devem ser maiores que zero');
-        return;
-    }
-
-    try {
-        const response = await fetch('/api/projetos', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                nome: nome,
-                descricao: descricao,
-                localizacao: localizacao,
-                largura_m: largura_m,
-                altura_m: altura_m,
-                escala: escala
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok && data.success) {
-            fecharModalCriarProjeto();
-            
-            // Calcula o tamanho do canvas baseado nas dimensões reais
-            const larguraPixels = largura_m * escala;
-            const alturaPixels = altura_m * escala;
-            
-            alert(`Projeto criado!\nDimensões: ${largura_m}m x ${altura_m}m\nCanvas: ${larguraPixels}px x ${alturaPixels}px`);
-            
-            // Redireciona para o editor
-            window.location.href = `/editor/${data.projetoId}`;
-        } else {
-            alert(data.error || 'Erro ao criar projeto');
-        }
-    } catch (error) {
-        console.error('Erro ao criar projeto:', error);
-        alert('Erro ao criar projeto');
-    }
-}
-
-// Modifique o botão no dashboard para usar o modal
-// No seu HTML, mude para:
-// <button class="btn btn-primary" onclick="mostrarModalCriarProjeto()">Novo Projeto</button>
-
-// Adicione também um botão para abrir projetos existentes
-function abrirProjeto(projetoId) {
-    console.log('Abrindo projeto ID:', projetoId);
-    // Redireciona para o editor com o ID do projeto
-    window.location.href = `/editor/${projetoId}`;
-}
-function editarProjeto(projetoId) {
-    console.log('Editando projeto ID:', projetoId);
-    window.location.href = `/editor/${projetoId}`;
-}
-        // Carrega os dados quando a página abre
-        document.addEventListener('DOMContentLoaded', carregarUsuario);
     </script>
 </body>
 </html>
